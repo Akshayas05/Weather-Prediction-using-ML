@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional AI Prediction Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            display: none;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .main-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .menu-card:hover::before {
+            left: 100%;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-20px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        }
+
+        .menu-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 20px;
+            color: white;
+            display: inline-block;
+        }
+
+        .weather-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .flight-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .disaster-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+        .menu-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .menu-description {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .prediction-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .analytics-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .predict-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .predict-btn:hover::before {
+            left: 100%;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .predict-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .result-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .result-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .confidence-bar {
+            background: rgba(255,255,255,0.3);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .confidence-fill {
+            background: rgba(255,255,255,0.9);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .history-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-menu {
+                grid-template-columns: 1fr;
+            }
+            
+            .menu-card {
+                padding: 30px 20px;
+            }
+            
+            .prediction-card,
+            .analytics-card {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .insight-panel {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .insight-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .insight-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="showMainMenu()">← Back to Dashboard</button>
+        
+        <!-- Main Menu Page -->
+        <div id="mainMenu" class="page active">
+            <div class="header">
+                <h1>🔮 AI Prediction Analytics</h1>
+                <p>Advanced predictive analytics with real-time visualizations</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">1,247</div>
+                    <div class="stat-label">Total Predictions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">94.2%</div>
+                    <div class="stat-label">Accuracy Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">Active Models</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">23ms</div>
+                    <div class="stat-label">Avg Response</div>
+                </div>
+            </div>
+
+            <div class="main-menu">
+                <div class="menu-card" onclick="showPage('weather')">
+                    <div class="menu-icon weather-icon">🌤️</div>
+                    <div class="menu-title">Weather Analytics</div>
+                    <div class="menu-description">
+                        Advanced meteorological predictions with historical trend analysis and confidence intervals.
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="showPage('flight')">
+                    <div class="menu-icon flight-icon">✈️</div>
+                    <div class="menu-title">Flight Intelligence</div>
+                    <div class="menu-description">
+                        Comprehensive flight delay analysis with route optimization and performance metrics.
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="showPage('disaster')">
+                    <div class="menu-icon disaster-icon">🌪️</div>
+                    <div class="menu-title">Disaster Intelligence</div>
+                    <div class="menu-description">
+                        AI-powered disaster classification with risk assessment and impact visualization.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather Prediction Page -->
+        <div id="weatherPage" class="page">
+            <div class="header">
+                <h1>🌤️ Weather Analytics Dashboard</h1>
+                <p>Advanced meteorological prediction system</p>
+            </div>
+            
+            <div class="dashboard-container">
+                <div class="prediction-card">
+                    <div class="card-header">
+                        <div class="card-icon weather-icon">🌤️</div>
+                        <div class="card-title">Weather Prediction</div>
+                    </div>
+                    
+                    <form id="weatherForm">
+                        <div class="form-group">
+                            <label for="temperature">Temperature (°C)</label>
+                            <input type="number" id="temperature" name="temperature" step="0.1" placeholder="Enter temperature" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="humidity">Humidity (%)</label>
+                            <input type="number" id="humidity" name="humidity" min="0" max="100" placeholder="Enter humidity" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="pressure">Pressure (hPa)</label>
+                            <input type="number" id="pressure" name="pressure" step="0.1" placeholder="Enter pressure" required>
+                        </div>
+                        
+                        <button type="submit" class="predict-btn">🔍 Analyze Weather</button>
+                    </form>
+                    
+                    <div class="loading" id="weatherLoading">
+                        <div class="spinner"></div>
+                        <p>Processing atmospheric data...</p>
+                    </div>
+                    
+                    <div id="weatherResult" class="result-section">
+                        <div class="result-title">Weather Prediction</div>
+                        <div class="result-value" id="weatherValue"></div>
+                        <div>Confidence: <span id="weatherConfidence">0%</span></div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="weatherConfidenceBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="insight-panel">
+                        <div class="insight-title">📊 Analysis Insights</div>
+                        <div class="insight-text" id="weatherInsight">Enter atmospheric conditions to receive detailed weather analysis and predictions.</div>
+                    </div>
+                </div>
+
+                
+            </div>
+
+            <div class="analytics-card">
+                <div class="card-header">
+                    <div class="card-icon weather-icon">📋</div>
+                    <div class="card-title">Recent Predictions</div>
+                </div>
+                <table class="history-table" id="weatherHistory">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Pressure</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Flight Delay Page -->
+        <div id="flightPage" class="page">
+            <div class="header">
+                <h1>✈️ Flight Intelligence Dashboard</h1>
+                <p>Comprehensive flight performance analytics</p>
+            </div>
+            
+            <div class="dashboard-container">
+                <div class="prediction-card">
+                    <div class="card-header">
+                        <div class="card-icon flight-icon">✈️</div>
+                        <div class="card-title">Flight Analysis</div>
+                    </div>
+                    
+                    <form id="flightForm">
+                        <div class="form-group">
+                            <label for="airline">Airline</label>
+                            <select id="airline" name="airline" required>
+                                <option value="">Select Airline</option>
+                                <option value="0">Delta Airlines</option>
+                                <option value="1">American Airlines</option>
+                                <option value="2">United Airlines</option>
+                                <option value="3">Southwest Airlines</option>
+                                <option value="4">JetBlue Airways</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="from_airport">From Airport</label>
+                            <select id="from_airport" name="from_airport" required>
+                                <option value="">Select Departure Airport</option>
+                                <option value="0">JFK - New York</option>
+                                <option value="1">LAX - Los Angeles</option>
+                                <option value="2">ORD - Chicago</option>
+                                <option value="3">IAH - Houston</option>
+                                <option value="4">PHX - Phoenix</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="to_airport">To Airport</label>
+                            <select id="to_airport" name="to_airport" required>
+                                <option value="">Select Arrival Airport</option>
+                                <option value="0">JFK - New York</option>
+                                <option value="1">LAX - Los Angeles</option>
+                                <option value="2">ORD - Chicago</option>
+                                <option value="3">IAH - Houston</option>
+                                <option value="4">PHX - Phoenix</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="day">Day of Week</label>
+                            <select id="day" name="day" required>
+                                <option value="">Select Day</option>
+                                <option value="0">Monday</option>
+                                <option value="1">Tuesday</option>
+                                <option value="2">Wednesday</option>
+                                <option value="3">Thursday</option>
+                                <option value="4">Friday</option>
+                                <option value="5">Saturday</option>
+                                <option value="6">Sunday</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="time">Departure Time</label>
+                            <select id="time" name="time" required>
+                                <option value="">Select Time</option>
+                                <option value="6">06:00 - Early Morning</option>
+                                <option value="9">09:00 - Morning</option>
+                                <option value="12">12:00 - Noon</option>
+                                <option value="15">15:00 - Afternoon</option>
+                                <option value="18">18:00 - Evening</option>
+                                <option value="21">21:00 - Night</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="predict-btn">🔍 Analyze Flight</button>
+                    </form>
+                    
+                    <div class="loading" id="flightLoading">
+                        <div class="spinner"></div>
+                        <p>Analyzing flight patterns...</p>
+                    </div>
+                    
+                    <div id="flightResult" class="result-section">
+                        <div class="result-title">Flight Status Prediction</div>
+                        <div class="result-value" id="flightValue"></div>
+                        <div>Reliability: <span id="flightConfidence">0%</span></div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="flightConfidenceBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="insight-panel">
+                        <div class="insight-title">✈️ Flight Insights</div>
+                        <div class="insight-text" id="flightInsight">Select flight parameters to receive comprehensive delay analysis and recommendations.</div>
+                    </div>
+                </div>
+
+                </div>
+
+            <div class="analytics-card">
+                <div class="card-header">
+                    <div class="card-icon flight-icon">📋</div>
+                    <div class="card-title">Flight Analysis History</div>
+                </div>
+                <table class="history-table" id="flightHistory">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Route</th>
+                            <th>Airline</th>
+                            <th>Day</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Disaster Classification Page -->
+        <div id="disasterPage" class="page">
+            <div class="header">
+                <h1>🌪️ Disaster Intelligence Dashboard</h1>
+                <p>Advanced disaster classification and risk analysis</p>
+            </div>
+            
+            <div class="dashboard-container">
+                <div class="prediction-card">
+                    <div class="card-header">
+                        <div class="card-icon disaster-icon">🌪️</div>
+                        <div class="card-title">Disaster Classification</div>
+                    </div>
+                    
+                    <form id="disasterForm">
+                        <div class="form-group">
+                            <label for="disaster_text">Disaster Description</label>
+                            <textarea id="disaster_text" name="disaster_text" placeholder="Enter detailed description of the disaster event..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="predict-btn">🔍 Classify Disaster</button>
+                    </form>
+                    
+                    <div class="loading" id="disasterLoading">
+                        <div class="spinner"></div>
+                        <p>Processing disaster data...</p>
+                    </div>
+                    
+                    <div id="disasterResult" class="result-section">
+                        <div class="result-title">Disaster Classification</div>
+                        <div class="result-value" id="disasterValue"></div>
+                        <div>Certainty: <span id="disasterConfidence">0%</span></div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="disasterConfidenceBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="insight-panel">
+                        <div class="insight-title">🚨 Risk Assessment</div>
+                        <div class="insight-text" id="disasterInsight">Provide disaster description for comprehensive classification and risk analysis.</div>
+                    </div>
+                </div>
+
+                
+            </div>
+
+            <div class="analytics-card">
+                <div class="card-header">
+                    <div class="card-icon disaster-icon">📋</div>
+                    <div class="card-title">Classification History</div>
+                </div>
+                <table class="history-table" id="disasterHistory">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Description</th>
+                            <th>Classification</th>
+                            <th>Confidence</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for charts
+        let weatherChart, flightChart, disasterChart;
+        let predictionHistory = {
+            weather: [],
+            flight: [],
+            disaster: []
+        };
+
+        // Initialize charts
+        function initializeCharts() {
+            initWeatherChart();
+            initFlightChart();
+            initDisasterChart();
+        }
+
+        function initWeatherChart() {
+            const ctx = document.getElementById('weatherChart');
+            if (!ctx) return;
+            
+            weatherChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Temperature Trends',
+                        data: [15, 18, 22, 28, 32, 35],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Humidity Levels',
+                        data: [65, 58, 62, 55, 48, 42],
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        function initDisasterChart() {
+            const ctx = document.getElementById('disasterChart');
+            if (!ctx) return;
+            
+            disasterChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Earthquake', 'Flood', 'Wildfire', 'Storm', 'Drought'],
+                    datasets: [{
+                        label: 'Frequency',
+                        data: [12, 19, 8, 15, 6],
+                        backgroundColor: [
+                            '#4facfe',
+                            '#00f2fe',
+                            '#43e97b',
+                            '#38f9d7',
+                            '#667eea'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Navigation functions
+        function showPage(pageType) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.getElementById(pageType + 'Page').classList.add('active');
+            document.querySelector('.back-btn').style.display = 'block';
+            
+            // Initialize charts when page is shown
+            setTimeout(() => {
+                if (pageType === 'weather' && !weatherChart) initWeatherChart();
+                if (pageType === 'flight' && !flightChart) initFlightChart();
+                if (pageType === 'disaster' && !disasterChart) initDisasterChart();
+            }, 100);
+        }
+        
+        function showMainMenu() {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.getElementById('mainMenu').classList.add('active');
+            document.querySelector('.back-btn').style.display = 'none';
+        }
+
+        // Enhanced prediction functions with confidence scores
+        function predictWeather(temperature, humidity, pressure) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    let prediction, confidence, insight;
+                    
+                    if (temperature > 30 && humidity > 70) {
+                        prediction = 'Thunderstorm ⛈️';
+                        confidence = 87;
+                        insight = 'High temperature and humidity create perfect conditions for thunderstorm development. Expect heavy rainfall and possible lightning activity.';
+                    } else if (temperature < 10 && humidity > 80) {
+                        prediction = 'Snow ❄️';
+                        confidence = 92;
+                        insight = 'Low temperature combined with high humidity indicates favorable snow conditions. Prepare for potential accumulation.';
+                    } else if (temperature > 25 && humidity < 50 && pressure > 1020) {
+                        prediction = 'Sunny ☀️';
+                        confidence = 95;
+                        insight = 'High pressure system with low humidity suggests clear, stable weather conditions with excellent visibility.';
+                    } else if (humidity > 80) {
+                        prediction = 'Cloudy ☁️';
+                        confidence = 78;
+                        insight = 'High humidity levels indicate cloud formation. Overcast conditions expected with possible light precipitation.';
+                    } else {
+                        prediction = 'Partly Cloudy ⛅';
+                        confidence = 82;
+                        insight = 'Moderate atmospheric conditions suggest variable cloud cover with generally pleasant weather.';
+                    }
+                    
+                    resolve({ prediction, confidence, insight });
+                }, 2000);
+            });
+        }
+
+        function predictFlight(airline, fromAirport, toAirport, day, time) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const delayChance = Math.random();
+                    let prediction, confidence, insight;
+                    
+                    // More sophisticated logic based on inputs
+                    const isWeekend = day >= 5;
+                    const isRushHour = time == 18 || time == 9;
+                    const isBusyRoute = (fromAirport == 0 && toAirport == 1) || (fromAirport == 1 && toAirport == 0);
+                    
+                    let delayProbability = 0.3;
+                    if (isWeekend) delayProbability -= 0.1;
+                    if (isRushHour) delayProbability += 0.2;
+                    if (isBusyRoute) delayProbability += 0.15;
+                    
+                    if (delayChance < delayProbability) {
+                        prediction = 'Delayed ⏰';
+                        confidence = 76;
+                        insight = 'Multiple factors indicate increased delay probability. Consider alternative departure times or routes.';
+                    } else if (delayChance < delayProbability + 0.1) {
+                        prediction = 'Cancelled ❌';
+                        confidence = 68;
+                        insight = 'High congestion and operational factors suggest potential cancellation risk. Monitor flight status closely.';
+                    } else {
+                        prediction = 'On Time ✅';
+                        confidence = 89;
+                        insight = 'Favorable conditions indicate on-time departure probability. Minimal delays expected on this route.';
+                    }
+                    
+                    resolve({ prediction, confidence, insight });
+                }, 2000);
+            });
+        }
+
+        function classifyDisaster(text) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const lowerText = text.toLowerCase();
+                    let prediction, confidence, insight, riskLevel;
+                    
+                    if (lowerText.includes('earthquake') || lowerText.includes('seismic')) {
+                        prediction = 'Earthquake 🌍';
+                        confidence = 94;
+                        riskLevel = 'High';
+                        insight = 'Seismic activity detected. Immediate structural assessment and evacuation protocols may be required.';
+                    } else if (lowerText.includes('flood') || lowerText.includes('water') || lowerText.includes('rain')) {
+                        prediction = 'Flood 🌊';
+                        confidence = 89;
+                        riskLevel = 'Medium';
+                        insight = 'Water-related disaster identified. Monitor water levels and ensure drainage systems are operational.';
+                    } else if (lowerText.includes('fire') || lowerText.includes('burn') || lowerText.includes('smoke')) {
+                        prediction = 'Wildfire 🔥';
+                        confidence = 91;
+                        riskLevel = 'High';
+                        insight = 'Fire-related emergency detected. Implement immediate evacuation and firefighting response protocols.';
+                    } else if (lowerText.includes('storm') || lowerText.includes('hurricane') || lowerText.includes('tornado') || lowerText.includes('wind')) {
+                        prediction = 'Storm 🌪️';
+                        confidence = 86;
+                        riskLevel = 'High';
+                        insight = 'Severe weather event identified. Secure structures and prepare for high wind conditions.';
+                    } else if (lowerText.includes('drought') || lowerText.includes('dry')) {
+                        prediction = 'Drought 🏜️';
+                        confidence = 82;
+                        riskLevel = 'Medium';
+                        insight = 'Extended dry conditions identified. Water conservation and agricultural impact mitigation recommended.';
+                    } else {
+                        prediction = 'Natural Disaster 🌪️';
+                        confidence = 65;
+                        riskLevel = 'Unknown';
+                        insight = 'General disaster pattern detected. Further analysis required for specific classification and response planning.';
+                    }
+                    
+                    resolve({ prediction, confidence, insight, riskLevel });
+                }, 2000);
+            });
+        }
+
+        // History management functions
+        function addToHistory(type, data) {
+            const timestamp = new Date().toLocaleTimeString();
+            predictionHistory[type].unshift({ ...data, timestamp });
+            if (predictionHistory[type].length > 10) {
+                predictionHistory[type].pop();
+            }
+            updateHistoryTable(type);
+        }
+
+        function updateHistoryTable(type) {
+            const tableBody = document.querySelector(`#${type}History tbody`);
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            predictionHistory[type].forEach(entry => {
+                const row = tableBody.insertRow();
+                
+                if (type === 'weather') {
+                    row.innerHTML = `
+                        <td>${entry.timestamp}</td>
+                        <td>${entry.temperature}°C</td>
+                        <td>${entry.humidity}%</td>
+                        <td>${entry.pressure} hPa</td>
+                        <td>${entry.prediction}</td>
+                        <td>${entry.confidence}%</td>
+                    `;
+                } else if (type === 'flight') {
+                    row.innerHTML = `
+                        <td>${entry.timestamp}</td>
+                        <td>${entry.route}</td>
+                        <td>${entry.airline}</td>
+                        <td>${entry.day}</td>
+                        <td>${entry.prediction}</td>
+                        <td>${entry.confidence}%</td>
+                    `;
+                } else if (type === 'disaster') {
+                    row.innerHTML = `
+                        <td>${entry.timestamp}</td>
+                        <td>${entry.description.substring(0, 50)}...</td>
+                        <td>${entry.prediction}</td>
+                        <td>${entry.confidence}%</td>
+                        <td>${entry.riskLevel}</td>
+                    `;
+                }
+            });
+        }
+
+        // Form submission handlers
+        document.getElementById('weatherForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const humidity = parseInt(document.getElementById('humidity').value);
+            const pressure = parseFloat(document.getElementById('pressure').value);
+            
+            document.getElementById('weatherLoading').style.display = 'block';
+            document.getElementById('weatherResult').classList.remove('show');
+            
+            try {
+                const { prediction, confidence, insight } = await predictWeather(temperature, humidity, pressure);
+                
+                document.getElementById('weatherValue').textContent = prediction;
+                document.getElementById('weatherConfidence').textContent = confidence + '%';
+                document.getElementById('weatherConfidenceBar').style.width = confidence + '%';
+                document.getElementById('weatherInsight').textContent = insight;
+                document.getElementById('weatherResult').classList.add('show');
+                
+                // Add to history
+                addToHistory('weather', {
+                    temperature,
+                    humidity,
+                    pressure,
+                    prediction,
+                    confidence
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('weatherLoading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('flightForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const airline = document.getElementById('airline').value;
+            const fromAirport = document.getElementById('from_airport').value;
+            const toAirport = document.getElementById('to_airport').value;
+            const day = document.getElementById('day').value;
+            const time = document.getElementById('time').value;
+            
+            document.getElementById('flightLoading').style.display = 'block';
+            document.getElementById('flightResult').classList.remove('show');
+            
+            try {
+                const { prediction, confidence, insight } = await predictFlight(airline, fromAirport, toAirport, day, time);
+                
+                document.getElementById('flightValue').textContent = prediction;
+                document.getElementById('flightConfidence').textContent = confidence + '%';
+                document.getElementById('flightConfidenceBar').style.width = confidence + '%';
+                document.getElementById('flightInsight').textContent = insight;
+                document.getElementById('flightResult').classList.add('show');
+                
+                // Add to history
+                const airlineNames = ['Delta', 'American', 'United', 'Southwest', 'JetBlue'];
+                const airportCodes = ['JFK', 'LAX', 'ORD', 'IAH', 'PHX'];
+                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                
+                addToHistory('flight', {
+                    route: `${airportCodes[fromAirport]} → ${airportCodes[toAirport]}`,
+                    airline: airlineNames[airline],
+                    day: dayNames[day],
+                    prediction,
+                    confidence
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('flightLoading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('disasterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const disasterText = document.getElementById('disaster_text').value;
+            
+            document.getElementById('disasterLoading').style.display = 'block';
+            document.getElementById('disasterResult').classList.remove('show');
+            
+            try {
+                const { prediction, confidence, insight, riskLevel } = await classifyDisaster(disasterText);
+                
+                document.getElementById('disasterValue').textContent = prediction;
+                document.getElementById('disasterConfidence').textContent = confidence + '%';
+                document.getElementById('disasterConfidenceBar').style.width = confidence + '%';
+                document.getElementById('disasterInsight').textContent = insight;
+                document.getElementById('disasterResult').classList.add('show');
+                
+                // Add to history
+                addToHistory('disaster', {
+                    description: disasterText,
+                    prediction,
+                    confidence,
+                    riskLevel
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('disasterLoading').style.display = 'none';
+            }
+        });
+
+        // Enhanced animations and interactions
+        document.querySelectorAll('.form-group input, .form-group select, .form-group textarea').forEach(element => {
+            element.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
+            });
+            
+            element.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        // Update statistics periodically
+        function updateStatistics() {
+            const totalPredictions = document.querySelector('.stat-number');
+            if (totalPredictions) {
+                let current = parseInt(totalPredictions.textContent.replace(',', ''));
+                setInterval(() => {
+                    current += Math.floor(Math.random() * 3);
+                    totalPredictions.textContent = current.toLocaleString();
+                }, 30000);
+            }
+        }
+
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatistics();
+            // Charts will be initialized when pages are shown
+        });
+
+        // Add some dynamic effects to stat cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) rotate(1deg)';
+                this.style.transition = 'transform 0.3s ease';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) rotate(0deg)';
+            });
+        });
+    </script>
+</body>
+</html>
